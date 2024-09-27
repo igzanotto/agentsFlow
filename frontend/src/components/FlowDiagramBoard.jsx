@@ -8,6 +8,8 @@ import ReactFlow, {
   useEdgesState,
   Handle,
   Position,
+  getBezierPath,
+  EdgeText,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -34,7 +36,7 @@ const initialNodes = [
   },
 ];
 
-const initialEdges = [{ id: 'e1-2', source: '1', target: '2', type: 'smoothstep' }];
+const initialEdges = [{ id: 'e1-2', source: '1', target: '2', type: 'CustomEdge' }];
 
 const CustomNode = ({ data }) => {
   return (
@@ -68,6 +70,44 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
+const CustomEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  data,
+}) => {
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <path id={id} style={style} className="react-flow__edge-path" d={edgePath} />
+      <EdgeText
+        x={labelX}
+        y={labelY}
+        label={<button onClick={() => data.onDelete(id)}>×</button>}
+        labelStyle={{ fill: 'black', fontWeight: 700 }}
+        labelShowBg={false}
+      />
+    </>
+  );
+};
+
+const edgeTypes = {
+  custom: CustomEdge,
+};
+
 function FlowDiagramBoard() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map(node => ({
     ...node,
@@ -83,9 +123,13 @@ function FlowDiagramBoard() {
   const [editingNode, setEditingNode] = useState(null);
 
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({ ...params, type: 'smoothstep' }, eds)),
+    (params) => setEdges((eds) => addEdge({ ...params, type: 'custom', data: { onDelete: deleteEdge } }, eds)),
     [setEdges]
   );
+
+  const deleteEdge = useCallback((edgeId) => {
+    setEdges((eds) => eds.filter((edge) => edge.id !== edgeId));
+  }, [setEdges]);
 
   const addNode = () => {
     if (nodeName) {
@@ -140,6 +184,7 @@ function FlowDiagramBoard() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
       >
         <Controls />

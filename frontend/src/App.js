@@ -16,6 +16,7 @@ function App() {
     <div>
       {/* <h1>{message}</h1> */}
       <FlowDiagramBoard />
+      {/* <CustomNodeFlow /> */}
     </div>
   );
 }
