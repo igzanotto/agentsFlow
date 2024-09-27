@@ -6,15 +6,35 @@ import ReactFlow, {
   Background,
   useNodesState,
   useEdgesState,
+  Handle,
+  Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 const initialNodes = [
-  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Start' } },
-  { id: '2', position: { x: 0, y: 100 }, data: { label: 'Process' } },
+  { 
+    id: '1', 
+    type: 'custom',
+    position: { x: 0, y: 0 }, 
+    data: { 
+      label: 'Start',
+      onEdit: () => {}, // These will be replaced in the component
+      onDelete: () => {}
+    } 
+  },
+  { 
+    id: '2', 
+    type: 'custom',
+    position: { x: 0, y: 100 }, 
+    data: { 
+      label: 'Process',
+      onEdit: () => {}, // These will be replaced in the component
+      onDelete: () => {}
+    } 
+  },
 ];
 
-const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
+const initialEdges = [{ id: 'e1-2', source: '1', target: '2', type: 'smoothstep' }];
 
 const CustomNode = ({ data }) => {
   return (
@@ -23,8 +43,9 @@ const CustomNode = ({ data }) => {
       border: '1px solid #ddd', 
       padding: '10px', 
       borderRadius: '5px',
-      minWidth: '150px'  // Add this to ensure the node is wide enough
+      minWidth: '150px'
     }}>
+      <Handle type="target" position={Position.Top} />
       <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{data.label}</div>
       <button 
         onClick={() => data.onEdit(data.id)}
@@ -38,6 +59,7 @@ const CustomNode = ({ data }) => {
       >
         Delete
       </button>
+      <Handle type="source" position={Position.Bottom} />
     </div>
   );
 };
@@ -47,18 +69,29 @@ const nodeTypes = {
 };
 
 function FlowDiagramBoard() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map(node => ({
+    ...node,
+    data: {
+      ...node.data,
+      onEdit: () => startEditingNode(node.id),
+      onDelete: () => deleteNode(node.id)
+    }
+  })));
+
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [nodeName, setNodeName] = useState('');
   const [editingNode, setEditingNode] = useState(null);
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge({ ...params, type: 'smoothstep' }, eds)),
+    [setEdges]
+  );
 
   const addNode = () => {
     if (nodeName) {
       const newNode = {
         id: Date.now().toString(),
-        type: 'custom',  // Make sure this is set to 'custom'
+        type: 'custom',  
         position: { x: Math.random() * 500, y: Math.random() * 500 },
         data: { 
           label: nodeName,
@@ -107,6 +140,7 @@ function FlowDiagramBoard() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        fitView
       >
         <Controls />
         <MiniMap />
