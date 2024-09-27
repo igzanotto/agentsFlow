@@ -1,6 +1,9 @@
 import React, { useCallback } from 'react';
 import {
   ReactFlow,
+  MiniMap,
+  Controls,
+  Background,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -14,7 +17,7 @@ const initialNodes = [
 ];
 const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
  
-export default function App() {
+export default function FlowBoard() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
  
@@ -31,7 +34,11 @@ export default function App() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-      />
+      >
+        <Controls />
+        <MiniMap />
+        <Background variant="dots" gap={12} size={1} />
+      </ReactFlow>
     </div>
   );
 }
